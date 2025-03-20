@@ -11,7 +11,7 @@ import (
 )
 
 func Setup() (*gorm.DB, error) {
-	err := godotenv.Load()
+	err := godotenv.Load() // Загрузка переменных окружения из файла .env
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
@@ -26,7 +26,7 @@ func Setup() (*gorm.DB, error) {
 		os.Getenv("DB_PORT"),     // Добавлен параметр порта
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{}) // Подключение к БД
 	if err != nil {
 		log.Fatal("Can't connect to database")
 	}
@@ -36,5 +36,5 @@ func Setup() (*gorm.DB, error) {
 	}
 
 	log.Println("Database connected")
-	return db, nil
+	return db, nil // Возвращаем объект подключения к БД
 }
