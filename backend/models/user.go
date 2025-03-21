@@ -9,14 +9,15 @@ import (
 )
 
 type User struct {
-	gorm.Model        // Добавление полей ID, CreatedAt, UpdatedAt, DeletedAt
-	FirstName  string `gorm:"size:255;not null;unique" json:"first_name"` // Имя
-	LastName   string `gorm:"size:255;not null;unique" json:"last_name"`  // Фамилия
-	Patronymic string `gorm:"size:255;not null;unique" json:"patronymic"` // Отчество
-	Email      string `gorm:"size:255;not null;unique" json:"email"`      // Электронная почта
-	Password   string `gorm:"size:255;not null;" json:"password"`         // Пароль
-	City       string `gorm:"size:255;not null;" json:"city"`             // Город
-	Birthday   string `gorm:"size:255;not null;" json:"birthday"`         // Дата рождения
+	gorm.Model          // Добавление полей ID, CreatedAt, UpdatedAt, DeletedAt
+	FirstName  string   `gorm:"size:255;not null;unique" json:"first_name"` // Имя
+	LastName   string   `gorm:"size:255;not null;unique" json:"last_name"`  // Фамилия
+	Patronymic string   `gorm:"size:255;not null;unique" json:"patronymic"` // Отчество
+	Email      string   `gorm:"size:255;not null;unique" json:"email"`      // Электронная почта
+	Password   string   `gorm:"size:255;not null;" json:"password"`         // Пароль
+	City       string   `gorm:"size:255;not null;" json:"city"`             // Город
+	Birthday   string   `gorm:"size:255;not null;" json:"birthday"`         // Дата рождения
+	Courses    []Course `gorm:"many2one:user_courses;" json:"courses"`      // Курсы
 }
 
 func (u *User) HashPassword() error {
