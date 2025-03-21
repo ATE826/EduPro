@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"EduPro/models"
+	"EduPro/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -55,4 +57,28 @@ func (s *Server) Register(c *gin.Context) { // Функция для регис�
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "User created"}) // Отправка сообщения об успешной регистрации
+}
+
+func (s *Server) LoginCheck(email, password string) (string, error) {
+	var err error
+
+	user := models.User{}
+
+	if err = s.db.Model(models.User{}).Where("email = ?", email).Take(&user).Error; err != nil {
+		return "", err
+	}
+
+	err = user.VerifyPassword(password)
+
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		return "", err
+	}
+
+	token, err := utils.GenerateToken(user)
+
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
