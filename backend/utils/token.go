@@ -43,7 +43,7 @@ func VerifyToken(c *gin.Context) error {
 		return nil
 	}
 
-	return errors.New("Invalid token") // Ошибка, если токен не валиден
+	return errors.New("invalid token") // Ошибка, если токен не валиден
 }
 
 func GetToken(c *gin.Context) (*jwt.Token, error) {
