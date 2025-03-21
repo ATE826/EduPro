@@ -82,3 +82,24 @@ func (s *Server) LoginCheck(email, password string) (string, error) {
 
 	return token, nil
 }
+
+func (s *Server) Login(c *gin.Context) { // Функция для входа пользователя
+	var input LoginInput
+
+	if err := c.ShouldBind(&input); err != nil { // Проверка валидности данных
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // Отправка ошибки, если данные не валидны
+		return
+	}
+
+	user := models.User{Email: input.Email, Password: input.Password} // Создание экземпляра пользователя
+
+	token, err := s.LoginCheck(user.Email, user.Password)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token}) // Отправка токена
+
+}
