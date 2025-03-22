@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Setup() (*gorm.DB, error) {
+func Setup() (*gorm.DB, error) { // Функция для инициализации подключения к БД
 	err := godotenv.Load() // Загрузка переменных окружения из файла .env
 	if err != nil {
 		log.Println("Error loading .env file")

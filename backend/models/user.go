@@ -17,7 +17,7 @@ type User struct {
 	Password   string   `gorm:"size:255;not null;" json:"password"`         // Пароль
 	City       string   `gorm:"size:255;not null;" json:"city"`             // Город
 	Birthday   string   `gorm:"size:255;not null;" json:"birthday"`         // Дата рождения
-	Courses    []Course `gorm:"many2one:user_courses;" json:"courses"`      // Курсы
+	Courses    []Course `gorm:"foreignKey:UserId" json:"courses"`           // Курсы (внешний ключ - UserID)
 }
 
 func (u *User) HashPassword() error {
