@@ -54,3 +54,52 @@ func (s *Server) CreateCource(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Course created and added to user"})
 }
+
+func (s *Server) DeleteCourse(c *gin.Context) {
+	// Получаем Id курса из параметров запроса
+	id := c.Param("id")
+
+	// Ищем курс по Id
+	var course models.Course
+	if err := s.db.First(&course, id).Error; err != nil {
+		// Если курс не найден, возвращаем ошибку
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	// Удаляем курс
+	if err := s.db.Delete(&course).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to delete course"})
+		return
+	}
+
+	// Возвращаем сообщение об успешном удалении
+	c.JSON(http.StatusOK, gin.H{"message": "Course deleted"})
+}
+
+func (s *Server) GetAllCourses(c *gin.Context) {
+	var courses []models.Course
+
+	// Получаем все курсы
+	if err := s.db.Find(&courses).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get courses"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"courses": courses})
+}
+
+func (s *Server) GetCourse(c *gin.Context) {
+	// Получаем Id курса из параметров запроса
+	id := c.Param("id")
+
+	// Ищем курс по Id
+	var course models.Course
+	if err := s.db.First(&course, id).Error; err != nil {
+		// Если курс не найден, возвращаем ошибку
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"course": course})
+}

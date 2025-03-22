@@ -29,8 +29,15 @@ func SetupRouter() *gin.Engine {
 
 	router := r.Group("/api") // Создание группы маршрутов
 
-	router.POST("/register", server.Register) // Регистрация пользователя
-	router.POST("/login", server.Login)       // Вход пользователя
+	// Регистрация и вход пользователя
+	router.POST("/register", server.Register)
+	router.POST("/login", server.Login)
+
+	// Маршруты для курсов
+	router.POST("/course", server.CreateCource)       // Создание курса
+	router.DELETE("/course/:id", server.DeleteCourse) // Удаление курса
+	router.GET("/courses", server.GetAllCourses)      // Получение всех курсов
+	router.GET("/course/:id", server.GetCourse)       // Получение курса по id
 
 	return r
 }
