@@ -19,7 +19,7 @@ func (s *Server) CreateTest(c *gin.Context) {
 	}
 
 	test := models.Test{
-		Task: input.Task,
+		Tasks: input.Task, // Изменил Task -> Tasks
 	}
 
 	var course models.Course                                                   // Получаем курс, к которому будем приписывать тест
@@ -29,7 +29,7 @@ func (s *Server) CreateTest(c *gin.Context) {
 	}
 
 	// Добавляем тест к курсу
-	course.TestId = test.ID
+	course.TestId = &test.ID
 
 	// Сохраняем тест и курсv
 	if err := s.db.Create(&test).Error; err != nil {
