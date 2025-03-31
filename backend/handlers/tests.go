@@ -29,9 +29,9 @@ func (s *Server) CreateTest(c *gin.Context) {
 	}
 
 	// Добавляем тест к курсу
-	course.Test = test
+	course.TestId = test.ID
 
-	// Сохраняем тест и курс
+	// Сохраняем тест и курсv
 	if err := s.db.Create(&test).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

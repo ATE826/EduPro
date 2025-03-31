@@ -8,12 +8,12 @@ import (
 )
 
 type CourseInput struct {
-	Title       string      `json:"title" binding:"required"`
-	Category    string      `json:"category" binding:"required"`
-	Description string      `json:"description" binding:"required"`
-	Video       string      `json:"video" binding:"required"`
-	UserId      uint        `json:"user_id" binding:"required"`
-	Test        models.Test `json:"test"`
+	Title       string `json:"title" binding:"required"`
+	Category    string `json:"category" binding:"required"`
+	Description string `json:"description" binding:"required"`
+	Video       string `json:"video" binding:"required"`
+	UserId      uint   `json:"user_id" binding:"required"`
+	TestId      uint   `json:"test_id"`
 }
 
 func (s *Server) CreateCource(c *gin.Context) {
@@ -28,13 +28,22 @@ func (s *Server) CreateCource(c *gin.Context) {
 		Category:    input.Category,
 		Description: input.Description,
 		Video:       input.Video,
-		Test:        input.Test,
+		TestId:      input.TestId,
 	}
 
 	// Получение пользователя, которому будем приписывать курс
-	var user models.User
-	if err := s.db.First(&user, "id = ?", input.UserId).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	user := models.User{}
+	result := s.db.First(&user, userId)
+	if result.Error != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot find user"})
+		c.Abort()
 		return
 	}
 

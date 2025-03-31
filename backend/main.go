@@ -2,10 +2,13 @@ package main
 
 import (
 	"EduPro/handlers"
+	"EduPro/middleware"
 	"EduPro/models"
 	"log"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
@@ -27,17 +30,30 @@ func SetupRouter() *gin.Engine {
 
 	server := handlers.NewServer(db) // Создание экземпляра сервера
 
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	router := r.Group("/api") // Создание группы маршрутов
 
 	// Регистрация и вход пользователя
 	router.POST("/register", server.Register)
 	router.POST("/login", server.Login)
 
+	//
+	courses := r.Group("/course")
+	courses.Use(middleware.JWTMiddleware())
+
 	// Маршруты для курсов
-	router.POST("/course", server.CreateCource)       // Создание курса
-	router.DELETE("/course/:id", server.DeleteCourse) // Удаление курса
-	router.GET("/courses", server.GetAllCourses)      // Получение всех курсов
-	router.GET("/course/:id", server.GetCourse)       // Получение курса по id
+
+	courses.POST("/createCourse", server.CreateCource)       // Создание курса
+	courses.DELETE("/deleteCourse/:id", server.DeleteCourse) // Удаление курса
+	courses.GET("/allCourses", server.GetAllCourses)         // Получение всех курсов
+	courses.GET("/course/:id", server.GetCourse)             // Получение курса по id
 
 	// Маршруты для тестов
 	router.POST("/course/:id/test", server.CreateTest)   // Создание теста для курса
