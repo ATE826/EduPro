@@ -9,6 +9,7 @@ type Course struct {
 	Category    string `gorm:"size:255;not null;" json:"category"`
 	Description string `gorm:"size:255;not null;" json:"description"`
 	Video       string `gorm:"size:255;not null;" json:"video"`
-	UserId      uint   `gorm:"size:255;not null;" json:"user_id"`   // Id пользователя-создателя курса
-	TestId      uint   `gorm:"foreignkey:CourseID;" json:"test_id"` // Связь с Test через внешний ключ CourseID
+	UserId      uint   `gorm:"not null;" json:"user_id"`      // ID пользователя-создателя курса
+	TestId      uint   `gorm:"not null;" json:"test_id"`      // Внешний ключ для связи с Test
+	Test        Test   `gorm:"foreignKey:TestId" json:"test"` // Связь с Test через внешний ключ TestId
 }

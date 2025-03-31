@@ -31,7 +31,7 @@ func Setup() (*gorm.DB, error) { // Функция для инициализац
 		log.Fatal("Can't connect to database")
 	}
 
-	if err := db.AutoMigrate(&User{}); err != nil {
+	if err := db.AutoMigrate(&User{}, &Course{}, &Test{}, &Task{}); err != nil {
 		log.Println("Can't migrate database: ", err)
 	}
 

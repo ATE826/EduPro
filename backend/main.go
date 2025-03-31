@@ -50,7 +50,7 @@ func SetupRouter() *gin.Engine {
 
 	// Маршруты для курсов
 
-	courses.POST("/createCourse", server.CreateCource)       // Создание курса
+	courses.POST("/createCourse", server.CreateCourse)       // Создание курса
 	courses.DELETE("/deleteCourse/:id", server.DeleteCourse) // Удаление курса
 	courses.GET("/allCourses", server.GetAllCourses)         // Получение всех курсов
 	courses.GET("/course/:id", server.GetCourse)             // Получение курса по id

@@ -16,22 +16,33 @@ type CourseInput struct {
 	TestId      uint   `json:"test_id"`
 }
 
-func (s *Server) CreateCource(c *gin.Context) {
+func (s *Server) CreateCourse(c *gin.Context) {
 	var input CourseInput
 
+	// Проверка на валидность данных
 	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	course := models.Course{ // Создание экземпляра курса
+	// Проверка, существует ли тест с данным TestId
+	var test models.Test
+	result := s.db.First(&test, input.TestId)
+	if result.Error != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Test not found"})
+		return
+	}
+
+	// Создание курса
+	course := models.Course{
 		Title:       input.Title,
 		Category:    input.Category,
 		Description: input.Description,
 		Video:       input.Video,
-		TestId:      input.TestId,
+		TestId:      input.TestId, // Привязка курса к тесту
 	}
 
-	// Получение пользователя, которому будем приписывать курс
+	// Получение пользователя
 	userId, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
@@ -39,28 +50,33 @@ func (s *Server) CreateCource(c *gin.Context) {
 		return
 	}
 
-	user := models.User{}
-	result := s.db.First(&user, userId)
+	var user models.User
+	result = s.db.First(&user, userId)
 	if result.Error != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot find user"})
 		c.Abort()
 		return
 	}
 
-	// Добавляем курс к пользователю
-	user.Courses = append(user.Courses, course)
+	// Привязываем курс к пользователю
+	course.UserId = user.ID
 
-	// Сохраняем курс и пользователя
+	// Сохраняем курс в базе данных
 	if err := s.db.Create(&course).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Обновляем информацию о курсах пользователя
+	user.Courses = append(user.Courses, course)
+
+	// Сохраняем обновления пользователя в базе данных
 	if err := s.db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Возвращаем сообщение об успешном создании курса
 	c.JSON(http.StatusCreated, gin.H{"message": "Course created and added to user"})
 }
 
