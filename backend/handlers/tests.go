@@ -29,7 +29,7 @@ func (s *Server) CreateTest(c *gin.Context) {
 	}
 
 	// Добавляем тест к курсу
-	course.TestId = &test.ID
+	course.TestId = test.ID
 
 	// Сохраняем тест и курсv
 	if err := s.db.Create(&test).Error; err != nil {
