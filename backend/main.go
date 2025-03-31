@@ -39,6 +39,11 @@ func SetupRouter() *gin.Engine {
 	router.GET("/courses", server.GetAllCourses)      // Получение всех курсов
 	router.GET("/course/:id", server.GetCourse)       // Получение курса по id
 
+	// Маршруты для тестов
+	router.POST("/course/:id/test", server.CreateTest)   // Создание теста для курса
+	router.GET("/course/:id/test", server.GetTest)       // Получение теста для курса
+	router.DELETE("/course/:id/test", server.DeleteTest) // Удаление теста для курса
+
 	return r
 }
 

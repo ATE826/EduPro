@@ -44,3 +44,32 @@ func (s *Server) CreateTest(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Test created and added to course"})
 }
+
+func (s *Server) GetTest(c *gin.Context) {
+	id := c.Param("id") // Получаем ID курса из параметров запроса
+
+	var test models.Test                                // Создаём переменную для хранения теста
+	if err := s.db.First(&test, id).Error; err != nil { // Ищем тест по ID
+		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"test": test}) // Возвращаем тест в формате JSON
+}
+
+func (s *Server) DeleteTest(c *gin.Context) {
+	id := c.Param("id") // Получаем ID теста из параметров запроса
+
+	var test models.Test                                // Создаём переменную для хранения теста
+	if err := s.db.First(&test, id).Error; err != nil { // Ищем тест по ID
+		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
+		return
+	}
+
+	if err := s.db.Delete(&test).Error; err != nil { // Удаляем тест
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Test deleted"}) // Возвращаем сообщение об успешном удалении
+}
