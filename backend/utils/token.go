@@ -68,3 +68,18 @@ func getTokenFromRequest(c *gin.Context) string {
 
 	return ""
 }
+
+func ValidateToken(c *gin.Context) error {
+	token, err := GetToken(c)
+
+	if err != nil {
+		return err
+	}
+
+	_, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		return nil
+	}
+
+	return errors.New("invalid token provided")
+}
