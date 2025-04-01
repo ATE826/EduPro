@@ -17,6 +17,11 @@ type CourseInput struct {
 	TestId      *uint  `json:"test_id"` // Теперь указатель, чтобы поддерживать null
 }
 
+type TestInput struct {
+	Title string        `json:"title" binding:"required"`
+	Task  []models.Task `json:"task"`
+}
+
 func (s *Server) CreateCourse(c *gin.Context) {
 	var input CourseInput
 
@@ -101,4 +106,48 @@ func (s *Server) GetCourse(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"course": course})
+}
+
+func (s *Server) CreateTest(c *gin.Context) {
+	// Получаем Id курса из параметров запроса
+	id := c.Param("course_id")
+
+	courseId, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
+	// Ищем курс по Id
+	var course models.Course
+	if err := s.db.First(&course, courseId).Error; err != nil {
+		// Если курс не найден, возвращаем ошибку
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	var input TestInput
+
+	// Проверка на валидность данных
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	test := models.Test{
+		CourseID: uintPtr(uint(courseId)), // Создаем указатель на uint
+		Title:    input.Title,
+		Tasks:    []models.Task{}, // Пустой срез, если задач нет
+	}
+
+	// Сохраняем тест в базе данных
+	if err := s.db.Create(&test).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Возвращаем успешный ответ с созданным тестом
+	c.JSON(http.StatusCreated, gin.H{"message": "Test created successfully", "test": test})
+}
+
+func uintPtr(i uint) *uint {
+	return &i
 }

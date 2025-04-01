@@ -49,25 +49,26 @@ func SetupRouter() *gin.Engine {
 	courses.Use(middleware.JWTMiddleware())
 
 	courses.POST("/", server.CreateCourse)
-	courses.DELETE("/:course_id", server.DeleteCourse) // Изменил :id -> :course_id
+	courses.POST("/:course_id", server.CreateTest)
+	courses.DELETE("/:course_id", server.DeleteCourse)
 	courses.GET("/", server.GetAllCourses)
-	courses.GET("/:course_id", server.GetCourse) // Изменил :id -> :course_id
+	courses.GET("/:course_id", server.GetCourse)
 
 	// Маршруты для тестов (внутри курсов)
-	tests := r.Group("/tests")
-	tests.Use(middleware.JWTMiddleware())
+	// tests := r.Group("/tests")
+	// tests.Use(middleware.JWTMiddleware())
 
-	tests.POST("/", server.CreateTest)
-	tests.GET("/:test_id", server.GetTest)
-	tests.DELETE("/:test_id", server.DeleteTest)
+	// tests.POST("/", server.CreateTest)
+	//tests.GET("/:test_id", server.GetTest)
+	//tests.DELETE("/:test_id", server.DeleteTest)
 
 	// Маршруты для задач (внутри тестов)
-	tasks := r.Group("/tasks")
-	tasks.Use(middleware.JWTMiddleware())
+	// tasks := r.Group("/tasks")
+	// tasks.Use(middleware.JWTMiddleware())
 
-	tasks.POST("/", server.CreateTask)
-	tasks.GET("/", server.GetAllTasks)
-	tasks.DELETE("/:task_id", server.DeleteTask)
+	// tasks.POST("/:course_id", server.CreateTask)
+	// tasks.GET("/:course_id", server.GetAllTasks)
+	// tasks.DELETE("/course_id/:task_id", server.DeleteTask)
 
 	return r
 }
