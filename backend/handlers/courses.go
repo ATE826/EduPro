@@ -3,6 +3,7 @@ package handlers
 import (
 	"EduPro/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,87 +14,55 @@ type CourseInput struct {
 	Description string `json:"description" binding:"required"`
 	Video       string `json:"video" binding:"required"`
 	UserId      uint   `json:"user_id" binding:"required"`
-	TestId      uint   `json:"test_id"`
+	TestId      *uint  `json:"test_id"` // Теперь указатель, чтобы поддерживать null
 }
 
 func (s *Server) CreateCourse(c *gin.Context) {
 	var input CourseInput
 
 	// Проверка на валидность данных
-	if err := c.ShouldBind(&input); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Проверка, существует ли тест с данным TestId
-	var test models.Test
-	result := s.db.First(&test, input.TestId)
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Test not found"})
-		return
-	}
-
-	// Создание курса
+	// Создание объекта Course
 	course := models.Course{
 		Title:       input.Title,
 		Category:    input.Category,
 		Description: input.Description,
 		Video:       input.Video,
-		TestId:      input.TestId, // Привязка курса к тесту
+		UserId:      input.UserId,
+		TestId:      input.TestId, // Поддержка null
 	}
 
-	// Получение пользователя
-	userId, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
-		c.Abort()
-		return
-	}
-
-	var user models.User
-	result = s.db.First(&user, userId)
-	if result.Error != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot find user"})
-		c.Abort()
-		return
-	}
-
-	// Привязываем курс к пользователю
-	course.UserId = user.ID
-
-	// Сохраняем курс в базе данных
+	// Сохранение курса в базе данных
 	if err := s.db.Create(&course).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Обновляем информацию о курсах пользователя
-	user.Courses = append(user.Courses, course)
-
-	// Сохраняем обновления пользователя в базе данных
-	if err := s.db.Save(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Возвращаем сообщение об успешном создании курса
-	c.JSON(http.StatusCreated, gin.H{"message": "Course created and added to user"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Course created", "course": course})
 }
 
 func (s *Server) DeleteCourse(c *gin.Context) {
 	// Получаем Id курса из параметров запроса
-	id := c.Param("id")
+	id := c.Param("course_id")
 
+	courseId, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
 	// Ищем курс по Id
 	var course models.Course
-	if err := s.db.First(&course, id).Error; err != nil {
+	if err := s.db.First(&course, courseId).Error; err != nil {
 		// Если курс не найден, возвращаем ошибку
 		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
 		return
 	}
 
 	// Удаляем курс
-	if err := s.db.Delete(&course).Error; err != nil {
+	if err := s.db.Delete(&course, id).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to delete course"})
 		return
 	}
@@ -116,11 +85,16 @@ func (s *Server) GetAllCourses(c *gin.Context) {
 
 func (s *Server) GetCourse(c *gin.Context) {
 	// Получаем Id курса из параметров запроса
-	id := c.Param("id")
+	id := c.Param("course_id")
+
+	courseId, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
 
 	// Ищем курс по Id
 	var course models.Course
-	if err := s.db.First(&course, id).Error; err != nil {
+	if err := s.db.First(&course, courseId).Error; err != nil {
 		// Если курс не найден, возвращаем ошибку
 		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
 		return

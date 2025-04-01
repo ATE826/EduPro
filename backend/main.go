@@ -45,7 +45,7 @@ func SetupRouter() *gin.Engine {
 	router.POST("/login", server.Login)
 
 	// Маршруты для курсов
-	courses := router.Group("/courses")
+	courses := r.Group("/courses")
 	courses.Use(middleware.JWTMiddleware())
 
 	courses.POST("/", server.CreateCourse)
@@ -54,7 +54,7 @@ func SetupRouter() *gin.Engine {
 	courses.GET("/:course_id", server.GetCourse) // Изменил :id -> :course_id
 
 	// Маршруты для тестов (внутри курсов)
-	tests := courses.Group("/:course_id/tests")
+	tests := r.Group("/tests")
 	tests.Use(middleware.JWTMiddleware())
 
 	tests.POST("/", server.CreateTest)
@@ -62,7 +62,7 @@ func SetupRouter() *gin.Engine {
 	tests.DELETE("/:test_id", server.DeleteTest)
 
 	// Маршруты для задач (внутри тестов)
-	tasks := tests.Group("/:test_id/tasks")
+	tasks := r.Group("/tasks")
 	tasks.Use(middleware.JWTMiddleware())
 
 	tasks.POST("/", server.CreateTask)
