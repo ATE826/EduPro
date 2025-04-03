@@ -57,6 +57,7 @@ func SetupRouter() *gin.Engine {
 
 	courses.GET("/", server.GetAllCourses)
 	courses.GET("/:course_id", server.GetCourse)
+	courses.GET("/:course_id/:test_id", server.GetTest)
 
 	return r
 }

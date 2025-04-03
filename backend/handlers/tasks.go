@@ -15,16 +15,13 @@ type TaskInput struct {
 
 func (s *Server) CreateTask(c *gin.Context) {
 	// Получаем ID курса и теста из параметров запроса
-	course_id := c.Param("course_id")
-	test_id := c.Param("test_id")
-
-	courseID, err := strconv.Atoi(course_id)
+	courseID, err := strconv.Atoi(c.Param("course_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
 		return
 	}
 
-	testID, err := strconv.Atoi(test_id)
+	testID, err := strconv.Atoi(c.Param("test_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid test ID"})
 		return
@@ -37,19 +34,20 @@ func (s *Server) CreateTask(c *gin.Context) {
 		return
 	}
 
-	// Проверяем, что у курса действительно этот тест
+	// Проверяем, что у курса действительно есть этот тест
 	if course.TestId == nil || *course.TestId != uint(testID) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "This course does not have the specified test"})
 		return
 	}
 
-	// Ищем тест по ID
+	// Ищем тест по ID с подгрузкой задач
 	var test models.Test
-	if err := s.db.First(&test, testID).Error; err != nil {
+	if err := s.db.Preload("Tasks").First(&test, testID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
 		return
 	}
 
+	// Привязываем входные данные к структуре Task
 	var input TaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -57,10 +55,12 @@ func (s *Server) CreateTask(c *gin.Context) {
 	}
 
 	task := models.Task{
-		TestID:   uint(testID), // Преобразуем testID в uint
+		TestID:   uint(testID),
 		Question: input.Question,
 		Answer:   input.Answer,
 	}
+
+	//fmt.Printf("Creating task: %+v\n", task) // Отладочный вывод
 
 	// Сохраняем задачу в базе данных
 	if err := s.db.Create(&task).Error; err != nil {
@@ -68,10 +68,5 @@ func (s *Server) CreateTask(c *gin.Context) {
 		return
 	}
 
-	// Обновляем поле TaskId в тесте
-	test.Tasks = append(test.Tasks, task)
-	if err := s.db.Save(&test).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update test with new task"})
-		return
-	}
+	c.JSON(http.StatusCreated, gin.H{"message": "Task created", "task": task})
 }
