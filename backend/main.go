@@ -50,7 +50,10 @@ func SetupRouter() *gin.Engine {
 
 	courses.POST("/", server.CreateCourse)
 	courses.POST("/:course_id", server.CreateTest)
+
 	courses.DELETE("/:course_id", server.DeleteCourse)
+	courses.DELETE("/:course_id/:test_id", server.DeleteTest)
+
 	courses.GET("/", server.GetAllCourses)
 	courses.GET("/:course_id", server.GetCourse)
 

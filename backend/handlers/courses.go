@@ -114,12 +114,13 @@ func (s *Server) CreateTest(c *gin.Context) {
 
 	courseId, err := strconv.Atoi(id)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
 		return
 	}
+
 	// Ищем курс по Id
 	var course models.Course
 	if err := s.db.First(&course, courseId).Error; err != nil {
-		// Если курс не найден, возвращаем ошибку
 		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
 		return
 	}
@@ -144,10 +145,71 @@ func (s *Server) CreateTest(c *gin.Context) {
 		return
 	}
 
+	// Обновляем поле TestId в курсе
+	course.TestId = &test.ID
+	if err := s.db.Save(&course).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update course with test ID"})
+		return
+	}
+
 	// Возвращаем успешный ответ с созданным тестом
 	c.JSON(http.StatusCreated, gin.H{"message": "Test created successfully", "test": test})
 }
 
+func (s *Server) DeleteTest(c *gin.Context) {
+	// Получаем ID курса и теста из параметров запроса
+	course_id := c.Param("course_id")
+	test_id := c.Param("test_id")
+
+	courseID, err := strconv.Atoi(course_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	testID, err := strconv.Atoi(test_id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid test ID"})
+		return
+	}
+
+	// Ищем курс по ID
+	var course models.Course
+	if err := s.db.First(&course, courseID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	// Проверяем, что у курса действительно этот тест
+	if course.TestId == nil || *course.TestId != uint(testID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "This course does not have the specified test"})
+		return
+	}
+
+	// Ищем тест по ID
+	var test models.Test
+	if err := s.db.First(&test, testID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
+		return
+	}
+
+	// Удаляем тест
+	if err := s.db.Delete(&test).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete test"})
+		return
+	}
+
+	// Обнуляем TestId у курса
+	course.TestId = nil
+	if err := s.db.Save(&course).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update course"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Test deleted successfully"})
+}
+
+// Функция для создания указателя на uint
 func uintPtr(i uint) *uint {
 	return &i
 }
