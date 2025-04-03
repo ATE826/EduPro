@@ -50,28 +50,13 @@ func SetupRouter() *gin.Engine {
 
 	courses.POST("/", server.CreateCourse)
 	courses.POST("/:course_id", server.CreateTest)
+	courses.POST("/:course_id/:test_id/", server.CreateTask)
 
 	courses.DELETE("/:course_id", server.DeleteCourse)
 	courses.DELETE("/:course_id/:test_id", server.DeleteTest)
 
 	courses.GET("/", server.GetAllCourses)
 	courses.GET("/:course_id", server.GetCourse)
-
-	// Маршруты для тестов (внутри курсов)
-	// tests := r.Group("/tests")
-	// tests.Use(middleware.JWTMiddleware())
-
-	// tests.POST("/", server.CreateTest)
-	//tests.GET("/:test_id", server.GetTest)
-	//tests.DELETE("/:test_id", server.DeleteTest)
-
-	// Маршруты для задач (внутри тестов)
-	// tasks := r.Group("/tasks")
-	// tasks.Use(middleware.JWTMiddleware())
-
-	// tasks.POST("/:course_id", server.CreateTask)
-	// tasks.GET("/:course_id", server.GetAllTasks)
-	// tasks.DELETE("/course_id/:task_id", server.DeleteTask)
 
 	return r
 }
