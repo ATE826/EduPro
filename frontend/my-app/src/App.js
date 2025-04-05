@@ -4,9 +4,17 @@ import './App.css';
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
+      <header className="Header">
         
       </header>
+
+      <main>
+        sdsfsfsdfsdf
+      </main>
+
+      <footer className="Footer">
+        
+      </footer>
     </div>
   );
 }
