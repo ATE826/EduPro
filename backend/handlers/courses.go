@@ -25,6 +25,13 @@ type TestInput struct {
 func (s *Server) CreateCourse(c *gin.Context) {
 	var input CourseInput
 
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
 	// Проверка на валидность данных
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -37,8 +44,8 @@ func (s *Server) CreateCourse(c *gin.Context) {
 		Category:    input.Category,
 		Description: input.Description,
 		Video:       input.Video,
-		UserId:      input.UserId,
-		TestId:      input.TestId, // Поддержка null
+		UserId:      userId.(uint), // Приведение к uint
+		TestId:      input.TestId,  // Поддержка null
 	}
 
 	// Сохранение курса в базе данных
@@ -79,9 +86,28 @@ func (s *Server) DeleteCourse(c *gin.Context) {
 func (s *Server) GetAllCourses(c *gin.Context) {
 	var courses []models.Course
 
-	// Получаем все курсы
-	if err := s.db.Find(&courses).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get courses"})
+	// Загружаем курсы вместе с тестами (если нужны) — без фильтрации по user_id
+	if err := s.db.Preload("Test").Find(&courses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get courses"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"courses": courses})
+}
+
+func (s *Server) GetAllUsersCourses(c *gin.Context) {
+	var courses []models.Course
+
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Фильтрация по user_id
+	if err := s.db.Where("user_id = ?", userId).Find(&courses).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get user courses"})
 		return
 	}
 

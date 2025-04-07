@@ -43,6 +43,7 @@ func SetupRouter() *gin.Engine {
 	// Регистрация и вход пользователя
 	router.POST("/register", server.Register)
 	router.POST("/login", server.Login)
+	router.GET("/", server.GetAllCourses)
 
 	// Маршруты для курсов
 	courses := r.Group("/courses")
@@ -56,7 +57,7 @@ func SetupRouter() *gin.Engine {
 	courses.DELETE("/:course_id/:test_id", server.DeleteTest)
 	courses.DELETE("/:course_id/:test_id/:task_id", server.DeleteTask)
 
-	courses.GET("/", server.GetAllCourses)
+	courses.GET("/", server.GetAllUsersCourses)
 	courses.GET("/:course_id", server.GetCourse)
 	courses.GET("/:course_id/:test_id", server.GetTest)
 	courses.GET("/:course_id/:test_id/:task_id", server.GetTask)
