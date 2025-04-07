@@ -30,11 +30,12 @@ Future<http.Response> postSignUp(
       'birthday': dob,
     }),
   );
-  if (response.statusCode == 201) {
+  if (response.statusCode == 201 || response.statusCode == 200) {
     var data = jsonDecode(response.body);
     print(data);
     return response;
   } else {
+    print(response.body);
     throw Exception(response.body);
   }
 }

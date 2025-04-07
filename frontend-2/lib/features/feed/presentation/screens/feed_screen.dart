@@ -30,6 +30,7 @@ class _FeedScreenState extends State<FeedScreen> {
       setState(() {
         prefs = sprefs;
         jwt = sprefs.getString('jwt');
+        //sprefs.remove("jwt");
       });
     }
   }

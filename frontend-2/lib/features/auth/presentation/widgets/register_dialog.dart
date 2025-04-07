@@ -1,7 +1,11 @@
+import 'dart:convert';
+
+import 'package:edupro/features/auth/domain/auth_repo.dart';
 import 'package:edupro/features/auth/presentation/widgets/email_field.dart';
 import 'package:edupro/features/auth/presentation/widgets/field.dart';
 import 'package:edupro/features/auth/presentation/widgets/register_button.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterDialog extends StatefulWidget {
   const RegisterDialog({Key? key}) : super(key: key);
@@ -112,13 +116,35 @@ class _RegisterDialogState extends State<RegisterDialog> {
             height: 16,
           ),
           RegisterButton(
-            email: email,
-            password: password,
-            midName: patronymic,
-            firstName: name,
-            lastName: surname,
-            city: city,
-            dob: dob,
+            onPressed: () async {
+              try {
+                final response = await postSignUp(
+                    email, password, surname, name, patronymic, city, dob);
+              if (response.statusCode == 200 || response.statusCode == 201) {
+                final resplogin = await postLogin(email, password);
+                  final data = jsonDecode(resplogin.body);
+                  final String accessToken = data['token'];
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('jwt', accessToken);
+                  print('Tokens saved successfully');
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  print('Logged in!');
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text("Вы зарегистрировались!")));
+                } else {
+                  // Handle non-200 responses
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text("Неверная почта и/или пароль")));
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text("Проверьте правильность ввода")));
+              }
+            },
           ),
           const SizedBox(
             height: 16,
