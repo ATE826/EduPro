@@ -39,9 +39,6 @@ class _CourseCardState extends State<CourseCard> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Center(
-                  child: Container(child: Center(child: Text('Превью'),),),
-                ),
                 Container(
                   margin: const EdgeInsets.only(
                       left: 18, right: 18, bottom: 8, top: 8),
@@ -51,16 +48,11 @@ class _CourseCardState extends State<CourseCard> {
                       const SizedBox(
                         height: 8,
                       ),
-                      Row(children: [
-                        
-                        
-                      ]),
+                      Row(children: []),
                       const Padding(padding: EdgeInsets.only(bottom: 6)),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          
-                        ],
+                        children: [],
                       ),
                       const Padding(padding: EdgeInsets.only(bottom: 12)),
                     ],

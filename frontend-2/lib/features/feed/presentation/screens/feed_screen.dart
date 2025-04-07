@@ -1,8 +1,11 @@
+import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
+import 'package:edupro/features/auth/presentation/widgets/register_dialog.dart';
 import 'package:edupro/features/feed/presentation/widgets/course_card.dart';
 import 'package:edupro/features/feed/presentation/widgets/filter_button.dart';
 import 'package:edupro/features/feed/presentation/widgets/search_button.dart';
 import 'package:edupro/helper/widgets/footer.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
@@ -12,6 +15,25 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  SharedPreferences? prefs;
+  String? jwt = "";
+
+  @override
+  void initState() {
+    super.initState();
+    getPrefs();
+  }
+
+  Future<void> getPrefs() async {
+    final sprefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        prefs = sprefs;
+        jwt = sprefs.getString('jwt');
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,11 +82,27 @@ class _FeedScreenState extends State<FeedScreen> {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.of(context).popAndPushNamed('home');
+                  print(jwt);
+                  if (prefs == null || prefs!.getString('jwt') == null) {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) => AuthDialog(),
+                    );
+                    return;
+                  }
+
+                  if (prefs!.getString('jwt')!.isNotEmpty) {
+                    Navigator.of(context).popAndPushNamed('home');
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) => AuthDialog(),
+                    );
+                  }
                 },
-                child: const Text(
-                  'Главная',
-                  style: TextStyle(fontSize: 20, color: Colors.amber),
+                child: Text(
+                  jwt == "" || jwt == null ? 'Войти' : 'Главная',
+                  style: const TextStyle(fontSize: 20, color: Colors.amber),
                 )),
           ),
         ],

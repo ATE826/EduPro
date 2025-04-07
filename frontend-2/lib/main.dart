@@ -1,4 +1,4 @@
-import 'package:edupro/features/auth/presentation/screens/auth_screen.dart';
+import 'package:edupro/features/auth/presentation/widgets/register_dialog.dart';
 import 'package:edupro/features/feed/presentation/screens/feed_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -22,14 +22,13 @@ class _AppState extends State<App> {
       title: 'EduPro',
       initialRoute: 'home',
       routes: {
-        'auth': (context) => AuthScreen(),
         'home': (context) => FeedScreen(),
         'course': (context) => Scaffold(),
         'editcourse': (context) => Scaffold(),
         'signup': (context) => Scaffold(),
         'profile': (context) => Scaffold(),
       },
-      home: const AuthScreen(),
+      home: const FeedScreen(),
     );
   }
 }   
