@@ -1,5 +1,7 @@
 import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
 import 'package:edupro/features/auth/presentation/widgets/register_dialog.dart';
+import 'package:edupro/features/feed/data/courses_repo.dart';
+import 'package:edupro/features/feed/domain/course.dart';
 import 'package:edupro/features/feed/presentation/widgets/course_card.dart';
 import 'package:edupro/features/feed/presentation/widgets/filter_button.dart';
 import 'package:edupro/features/feed/presentation/widgets/search_button.dart';
@@ -17,10 +19,12 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   SharedPreferences? prefs;
   String? jwt = "";
+  late Future<List<Course>> futureCourses;
 
   @override
   void initState() {
     super.initState();
+    futureCourses = CourseService.fetchCourses();
     getPrefs();
   }
 
@@ -83,11 +87,10 @@ class _FeedScreenState extends State<FeedScreen> {
                   ),
                 ),
                 onPressed: () {
-                  print(jwt);
                   if (prefs == null || prefs!.getString('jwt') == null) {
                     showDialog(
                       context: context,
-                      builder: (BuildContext context) => AuthDialog(),
+                      builder: (BuildContext context) => const AuthDialog(),
                     );
                     return;
                   }
@@ -97,12 +100,12 @@ class _FeedScreenState extends State<FeedScreen> {
                   } else {
                     showDialog(
                       context: context,
-                      builder: (BuildContext context) => AuthDialog(),
+                      builder: (BuildContext context) => const AuthDialog(),
                     );
                   }
                 },
                 child: Text(
-                  jwt == "" || jwt == null ? 'Войти' : 'Главная',
+                  jwt == "" || jwt == null ? 'Войти' : 'Профиль',
                   style: const TextStyle(fontSize: 20, color: Colors.amber),
                 )),
           ),
@@ -111,8 +114,8 @@ class _FeedScreenState extends State<FeedScreen> {
       // MARK: Body
       body: Container(
         color: Colors.amber.shade600,
-        child: const Column(children: [
-          Padding(
+        child: Column(children: [
+          const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -129,13 +132,76 @@ class _FeedScreenState extends State<FeedScreen> {
               ],
             ),
           ),
-          Column(
-            children: [CourseCard(title: 'title')],
-          )
+          Expanded(
+            // <-- This is the key fix
+            child: FutureBuilder<List<Course>>(
+              future: futureCourses,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No courses available'));
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final course = snapshot.data![index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          // Handle card tap
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => CourseDetailScreen(course: course),
+                          //   ),
+                          // );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                course.title,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Created: ${_formatDate(course.createdAt)}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (course.category != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Category: ${course.category}',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ]),
       ),
       // MARK: Footer
       bottomNavigationBar: const EduProFooter(),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 }
