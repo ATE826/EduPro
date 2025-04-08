@@ -1,3 +1,6 @@
+import 'package:edupro/features/account/data/account_repo.dart';
+import 'package:edupro/features/account/domain/user.dart';
+import 'package:edupro/features/account/presentation/account_screen.dart';
 import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
 import 'package:edupro/features/auth/presentation/widgets/register_dialog.dart';
 import 'package:edupro/features/course/presentation/course_detail_screen.dart';
@@ -87,7 +90,7 @@ class _FeedScreenState extends State<FeedScreen> {
                     ),
                   ),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   if (prefs == null || prefs!.getString('jwt') == null) {
                     showDialog(
                       context: context,
@@ -97,7 +100,12 @@ class _FeedScreenState extends State<FeedScreen> {
                   }
 
                   if (prefs!.getString('jwt')!.isNotEmpty) {
-                    Navigator.of(context).popAndPushNamed('home');
+                    final userData = await fetchUserData();
+                    final user = userData['user'] as User;
+                    final userCourses = userData['courses'] as List<Course>;
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => UserDetailScreen(
+                            user: user, userCourses: userCourses)));
                   } else {
                     showDialog(
                       context: context,
@@ -159,7 +167,8 @@ class _FeedScreenState extends State<FeedScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CourseDetailScreen(course: course),
+                              builder: (context) =>
+                                  CourseDetailScreen(course: course),
                             ),
                           );
                         },

@@ -4,6 +4,7 @@ class Course {
   final DateTime createdAt;
   final String? category;
   final String? description;
+  final int? testId;
 
   Course({
     required this.id,
@@ -11,6 +12,7 @@ class Course {
     required this.createdAt,
     this.category,
     this.description,
+    this.testId,
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,9 @@ class Course {
       createdAt: DateTime.parse(json['CreatedAt']),
       category: json['category'],
       description: json['description'],
+      testId: json['test_id'],
     );
   }
+
+  bool get hasTest => testId != null;
 }

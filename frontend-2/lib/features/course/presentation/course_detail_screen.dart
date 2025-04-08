@@ -1,4 +1,6 @@
 import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
+import 'package:edupro/features/course/domain/test_task.dart';
+import 'package:edupro/features/course/presentation/widgets/add_test_task_dialog.dart';
 import 'package:edupro/features/feed/data/courses_repo.dart';
 import 'package:edupro/features/feed/domain/course.dart';
 import 'package:edupro/helper/widgets/footer.dart';
@@ -7,8 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final Course course;
+  final Test? test;
 
-  const CourseDetailScreen({super.key, required this.course});
+  const CourseDetailScreen({super.key, required this.course, this.test});
 
   @override
   State<StatefulWidget> createState() => CourseDetailScreenState();
@@ -64,51 +67,6 @@ class CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: ElevatedButton(
-                style: ButtonStyle(
-                  padding: const WidgetStatePropertyAll(EdgeInsets.all(20)),
-                  surfaceTintColor:
-                      const WidgetStatePropertyAll(Colors.transparent),
-                  backgroundColor: const WidgetStatePropertyAll(
-                    Colors.blueGrey,
-                  ),
-                  overlayColor: const WidgetStatePropertyAll(
-                    Colors.blue,
-                  ),
-                  shadowColor: const WidgetStatePropertyAll(Colors.transparent),
-                  shape: WidgetStatePropertyAll(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                ),
-                onPressed: () {
-                  if (prefs == null || prefs!.getString('jwt') == null) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) => const AuthDialog(),
-                    );
-                    return;
-                  }
-
-                  if (prefs!.getString('jwt')!.isNotEmpty) {
-                    Navigator.of(context).popAndPushNamed('home');
-                  } else {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) => const AuthDialog(),
-                    );
-                  }
-                },
-                child: Text(
-                  jwt == "" || jwt == null ? 'Войти' : 'Профиль',
-                  style: const TextStyle(fontSize: 20, color: Colors.amber),
-                )),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -206,28 +164,42 @@ class CourseDetailScreenState extends State<CourseDetailScreen> {
                     Expanded(
                       child: SingleChildScrollView(
                         child: Text(
-                          widget.course.description ??
-                              'Описание не добавлено',
+                          widget.course.description ?? 'Описание не добавлено',
                           style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Handle course start
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                    if (widget.test != null) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Navigate to test screen
+                          },
+                          child: const Text('Начать тест'),
                         ),
-                        child: const Text('Начать курс'),
                       ),
-                    ),
+                    ] else ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final created = await showDialog<bool>(
+                              context: context,
+                              builder: (context) =>
+                                  AddTestDialog(courseId: widget.course.id),
+                            );
+                            if (created == true) {
+                              // Refresh course data
+                            }
+                          },
+                          child: const Text('Создать тест'),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

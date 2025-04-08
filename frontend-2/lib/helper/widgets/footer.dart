@@ -6,7 +6,6 @@ class EduProFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      color: Colors.deepOrangeAccent.shade700,
       child: Row(
         children: [
           const Icon(
@@ -17,11 +16,11 @@ class EduProFooter extends StatelessWidget {
           const SizedBox(
             width: 8,
           ),
-          const Text('EduPro@gmail.com', style: TextStyle(color: Colors.amber)),
+          const Text('EduPro@gmail.com'),
           Expanded(
             child: Container(),
           ),
-          const Text('@EduPro', style: TextStyle(color: Colors.amber))
+          const Text('@EduPro')
         ],
       ),
     );

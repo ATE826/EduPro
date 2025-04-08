@@ -6,12 +6,11 @@ class EduProHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.deepOrangeAccent.shade700,
       title: Row(
         children: [
           const Icon(
             Icons.circle,
-            color: Colors.amber,
+            // color: Colors.amber,
             size: 64,
           ),
           const SizedBox(
@@ -19,7 +18,7 @@ class EduProHeader extends StatelessWidget {
           ),
           const Text(
             'EduPro',
-            style: TextStyle(fontSize: 32, color: Colors.amber),
+            style: TextStyle(fontSize: 32,),
           ),
           Expanded(
             child: Container(),

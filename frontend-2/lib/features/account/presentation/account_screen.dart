@@ -1,6 +1,7 @@
 import 'package:edupro/features/account/domain/user.dart';
 import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
 import 'package:edupro/features/course/presentation/course_detail_screen.dart';
+import 'package:edupro/features/course/presentation/widgets/create_course_dialog.dart';
 import 'package:edupro/features/feed/domain/course.dart';
 import 'package:edupro/features/feed/presentation/widgets/filter_button.dart';
 import 'package:edupro/helper/widgets/footer.dart';
@@ -110,9 +111,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                     ),
                   ),
                 ),
-                onPressed: () {},
-                child: Text(
-                  jwt == "" || jwt == null ? 'Войти' : 'Профиль',
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  prefs.remove('jwt');
+                  Navigator.of(context).pop();
+                },
+                child: const Text(
+                  'Выйти',
                   style: const TextStyle(fontSize: 20, color: Colors.amber),
                 )),
           ),
@@ -150,15 +155,13 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                       ),
                     ),
                     const Divider(height: 20),
-                    _buildUserInfoRow('', widget.user.name),
-                    _buildUserInfoRow('', widget.user.surname),
-                    if (widget.user.patronymic?.isNotEmpty ?? false)
-                      _buildUserInfoRow('', widget.user.patronymic!),
-                    _buildUserInfoRow('', widget.user.city),
-                    _buildUserInfoRow(
-                      '',
-                      _formatDate(widget.user.birthday),
-                    ),
+                    _buildUserInfoRow('Имя:', widget.user.firstName),
+                    _buildUserInfoRow('Фамилия:', widget.user.lastName),
+                    if (widget.user.patronymic != null)
+                      _buildUserInfoRow('Отчество:', widget.user.patronymic!),
+                    _buildUserInfoRow('Город:', widget.user.city),
+                    _buildUserInfoRow('Дата рождения:', widget.user.birthday),
+                    _buildUserInfoRow('Email:', widget.user.email),
                     const Spacer(),
                     SizedBox(
                       width: double.infinity,
@@ -206,7 +209,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'My Courses',
+                          'Мои курсы',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -218,7 +221,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                             Expanded(
                               child: SearchBar(
                                 controller: _searchController,
-                                hintText: 'Search courses...',
+                                hintText: 'Поиск курсов...',
                                 onChanged: _filterCourses,
                               ),
                             ),
@@ -252,8 +255,11 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                                     child: ListTile(
                                       title: Text(course.title),
                                       subtitle: Text(
-                                        'Создан: ${_formatDate(course.createdAt)}',
+                                        'Категория: ${course.category}',
                                       ),
+                                      // trailing: course.testId != null
+                                      //     ? const Icon(Icons.quiz_outlined)
+                                      //     : null,
                                       onTap: () {
                                         Navigator.push(
                                           context,
@@ -275,11 +281,23 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        // Handle create new course
+                      onPressed: () async {
+                        final created = await showDialog<bool>(
+                          context: context,
+                          builder: (context) =>
+                              CreateCourseDialog(userId: widget.user.id),
+                        );
+
+                        if (created == true) {
+                          // Refresh course list if needed
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Курс успешно создан')),
+                          );
+                        }
                       },
                       icon: const Icon(Icons.add),
-                      label: const Text('Create New Course'),
+                      label: const Text('Создать новый курс'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -287,7 +305,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         ),
                       ),
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
