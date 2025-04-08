@@ -22,11 +22,7 @@ class _AppState extends State<App> {
       title: 'EduPro',
       initialRoute: 'home',
       routes: {
-        'home': (context) => FeedScreen(),
-        'course': (context) => Scaffold(),
-        'editcourse': (context) => Scaffold(),
-        'signup': (context) => Scaffold(),
-        'profile': (context) => Scaffold(),
+        'home': (context) => const FeedScreen(),
       },
       home: const FeedScreen(),
     );
