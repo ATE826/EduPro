@@ -45,6 +45,12 @@ func SetupRouter() *gin.Engine {
 	router.POST("/login", server.Login)
 	router.GET("/", server.GetAllCourses)
 
+	// Получение текущего пользователя
+	user := r.Group("/user")
+	user.Use(middleware.JWTMiddleware())
+
+	user.GET("/", server.GetCurrentUser)
+
 	// Маршруты для курсов
 	courses := r.Group("/courses")
 	courses.Use(middleware.JWTMiddleware())
