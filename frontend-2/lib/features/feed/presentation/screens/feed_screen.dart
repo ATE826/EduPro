@@ -1,5 +1,6 @@
 import 'package:edupro/features/auth/presentation/widgets/auth_dialog.dart';
 import 'package:edupro/features/auth/presentation/widgets/register_dialog.dart';
+import 'package:edupro/features/course/presentation/course_detail_screen.dart';
 import 'package:edupro/features/feed/data/courses_repo.dart';
 import 'package:edupro/features/feed/domain/course.dart';
 import 'package:edupro/features/feed/presentation/widgets/course_card.dart';
@@ -133,16 +134,15 @@ class _FeedScreenState extends State<FeedScreen> {
             ),
           ),
           Expanded(
-            // <-- This is the key fix
             child: FutureBuilder<List<Course>>(
               future: futureCourses,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('Ошибка: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No courses available'));
+                  return const Center(child: Text('Курсов нет'));
                 }
 
                 return ListView.builder(
@@ -156,12 +156,12 @@ class _FeedScreenState extends State<FeedScreen> {
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
                           // Handle card tap
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => CourseDetailScreen(course: course),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CourseDetailScreen(course: course),
+                            ),
+                          );
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16),
@@ -170,17 +170,17 @@ class _FeedScreenState extends State<FeedScreen> {
                             children: [
                               Text(
                                 course.title,
-                                style: Theme.of(context).textTheme.titleMedium,
+                                style: Theme.of(context).textTheme.titleLarge,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Created: ${_formatDate(course.createdAt)}',
+                                'Опубликован: ${_formatDate(course.createdAt)}',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               if (course.category != null) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Category: ${course.category}',
+                                  'Категория: ${course.category}',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
