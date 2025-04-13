@@ -206,3 +206,100 @@ func (s *Server) GetTask(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"task": task})
 }
+
+func (s *Server) UpdateTask(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
+	// Получаем ID курса, теста и задания из параметров запроса
+	courseId := c.Param("course_id")
+	testId := c.Param("test_id")
+	taskId := c.Param("task_id")
+
+	courseID, err := strconv.Atoi(courseId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	testID, err := strconv.Atoi(testId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid test ID"})
+		return
+	}
+
+	taskID, err := strconv.Atoi(taskId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task ID"})
+		return
+	}
+
+	// Ищем курс по ID
+	var course models.Course
+	if err := s.db.First(&course, courseID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	// Ищем тест по ID
+	var test models.Test
+	if err := s.db.First(&test, testID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
+		return
+	}
+
+	// Проверяем, что тест принадлежит указанному курсу
+	if test.CourseID == nil || *test.CourseID != uint(courseID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Test does not belong to the specified course"})
+		return
+	}
+
+	// Ищем задание по ID
+	var task models.Task
+	if err := s.db.First(&task, taskID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+		return
+	}
+
+	// Проверяем, что задание принадлежит указанному тесту
+	if task.TestID != uint(testID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Task does not belong to the specified test"})
+		return
+	}
+
+	var input TaskInput
+	// Проверка на валидность данных
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Обновляем только поля Question и Answer
+	task.Question = input.Question
+	task.Answer = input.Answer
+
+	// Сохраняем обновленное задание в базе данных
+	if err := s.db.Save(&task).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update task"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Task updated", "task": task})
+}

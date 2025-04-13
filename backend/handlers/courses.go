@@ -313,6 +313,146 @@ func (s *Server) GetTest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"test": test})
 }
 
+func (s *Server) UpdateCourse(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
+	// Получаем ID курса из параметров запроса
+	id := c.Param("course_id")
+	courseId, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	// Ищем курс по ID
+	var course models.Course
+	if err := s.db.First(&course, courseId).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	// Проверка, что курс принадлежит текущему пользователю
+	if course.UserId != userId.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this course"})
+		return
+	}
+
+	var input CourseInput
+	// Проверка на валидность данных
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Обновляем только необходимые данные, кроме TestId
+	course.Title = input.Title
+	course.Category = input.Category
+	course.Description = input.Description
+	course.Video = input.Video
+
+	// Сохраняем обновленный курс в базе данных
+	if err := s.db.Save(&course).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update course"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Course updated", "course": course})
+}
+
+func (s *Server) UpdateTest(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
+	// Получаем ID курса и теста из параметров запроса
+	courseId := c.Param("course_id")
+	testId := c.Param("test_id")
+
+	courseID, err := strconv.Atoi(courseId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	testID, err := strconv.Atoi(testId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid test ID"})
+		return
+	}
+
+	// Ищем курс по ID
+	var course models.Course
+	if err := s.db.First(&course, courseID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	}
+
+	// Ищем тест по ID
+	var test models.Test
+	if err := s.db.First(&test, testID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Test not found"})
+		return
+	}
+
+	// Проверяем, что тест принадлежит указанному курсу
+	if test.CourseID == nil || *test.CourseID != uint(courseID) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Test does not belong to the specified course"})
+		return
+	}
+
+	var input TestInput
+	// Проверка на валидность данных
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Обновляем только поле Title
+	test.Title = input.Title
+
+	// Сохраняем обновлённый тест в базе данных
+	if err := s.db.Save(&test).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update test"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Test updated", "test": test})
+}
+
 // Функция для создания указателя на uint
 func uintPtr(i uint) *uint {
 	return &i

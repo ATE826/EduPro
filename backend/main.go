@@ -77,6 +77,10 @@ func SetupRouter() *gin.Engine {
 	courses.GET("/:course_id/:test_id", server.GetTest)
 	courses.GET("/:course_id/:test_id/:task_id", server.GetTask)
 
+	courses.PATCH("/:course_id", server.UpdateCourse)
+	courses.PATCH("/:course_id/:test_id", server.UpdateTest)
+	courses.PATCH("/:course_id/:test_id/:task_id", server.UpdateTask)
+
 	return r
 }
 
