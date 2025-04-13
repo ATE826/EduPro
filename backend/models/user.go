@@ -10,6 +10,7 @@ import (
 
 type User struct {
 	gorm.Model
+	Role       string   `gorm:"size:20;default:user" json:"role"` // может быть "user" или "admin"
 	FirstName  string   `gorm:"size:255;not null;" json:"first_name"`
 	LastName   string   `gorm:"size:255;not null;" json:"last_name"`
 	Patronymic string   `gorm:"size:255;not null;" json:"patronymic"`
@@ -18,6 +19,7 @@ type User struct {
 	City       string   `gorm:"size:255;not null;" json:"city"`
 	Birthday   string   `gorm:"size:255;not null;" json:"birthday"`
 	Courses    []Course `gorm:"foreignKey:UserId" json:"courses"` // Связь с курсами
+	IsBlocked  bool     `gorm:"default:false" json:"is_blocked"`
 }
 
 func (u *User) HashPassword() error {

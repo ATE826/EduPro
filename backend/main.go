@@ -45,6 +45,14 @@ func SetupRouter() *gin.Engine {
 	router.POST("/login", server.Login)
 	router.GET("/", server.GetAllCourses)
 
+	// Админ
+	admin := r.Group("/admin")
+	admin.Use(middleware.JWTMiddleware()) // Использование JWT для защиты маршрутов
+
+	admin.GET("/users", server.GetAllUsers)
+	admin.GET("/users/:user_id", server.GetUser)
+	admin.PATCH("/users/:user_id", server.BlockUser)
+
 	// Получение текущего пользователя
 	user := r.Group("/user")
 	user.Use(middleware.JWTMiddleware())

@@ -4,6 +4,7 @@ import (
 	"EduPro/models"
 	"EduPro/utils"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -40,6 +41,16 @@ func (s *Server) Register(c *gin.Context) { // Функция для регис�
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // Отправка ошибки, если данные не валидны
 	}
 
+	adminLogin := os.Getenv("ADMIN_LOGIN")       // Получение логина администратора из переменной окружения
+	adminPassword := os.Getenv("ADMIN_PASSWORD") // Получение пароля администратора из переменной окружения
+
+	var role string
+	if input.Email == adminLogin && input.Password == adminPassword { // Проверка на совпадение логина и пароля с администратором
+		role = "admin" // Если совпадает, то роль администратора
+	} else {
+		role = "user" // Иначе роль пользователя
+	}
+
 	user := models.User{ // Создание экземпляра пользователя
 		FirstName:  input.FirstName,
 		LastName:   input.LastName,
@@ -48,6 +59,7 @@ func (s *Server) Register(c *gin.Context) { // Функция для регис�
 		Password:   input.Password,
 		City:       input.City,
 		Birthday:   input.Birthday,
+		Role:       role,
 	}
 
 	user.HashPassword() // Хеширование пароля
@@ -83,23 +95,41 @@ func (s *Server) LoginCheck(email, password string) (string, error) {
 	return token, nil
 }
 
-func (s *Server) Login(c *gin.Context) { // Функция для входа пользователя
+func (s *Server) Login(c *gin.Context) {
 	var input LoginInput
 
-	if err := c.ShouldBind(&input); err != nil { // Проверка валидности данных
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // Отправка ошибки, если данные не валидны
-		return
-	}
-
-	user := models.User{Email: input.Email, Password: input.Password} // Создание экземпляра пользователя
-
-	token, err := s.LoginCheck(user.Email, user.Password)
-
-	if err != nil {
+	// Валидация входных данных
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token}) // Отправка токена
+	// Поиск пользователя по email
+	var user models.User
+	if err := s.db.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		return
+	}
 
+	// Проверка на блокировку
+	if user.IsBlocked {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user is blocked"})
+		return
+	}
+
+	// Проверка пароля
+	if err := user.VerifyPassword(input.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid email or password"})
+		return
+	}
+
+	// Генерация токена
+	token, err := utils.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate token"})
+		return
+	}
+
+	// Успешный ответ
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }
