@@ -104,6 +104,12 @@ func (s *Server) BlockUser(c *gin.Context) {
 		return
 	}
 
+	// Запрещаем блокировать другого администратора
+	if user.Role == "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "admin cannot block another admin"})
+		return
+	}
+
 	// Инвертируем флаг блокировки
 	user.IsBlocked = !user.IsBlocked
 
