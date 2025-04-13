@@ -59,6 +59,7 @@ func SetupRouter() *gin.Engine {
 
 	user.GET("/", server.GetCurrentUser)
 	user.PATCH("/", server.UpdateUser)
+	user.DELETE("/", server.DeleteUser)
 
 	// Маршруты для курсов
 	courses := r.Group("/courses")
