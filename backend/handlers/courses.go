@@ -32,6 +32,19 @@ func (s *Server) CreateCourse(c *gin.Context) {
 		return
 	}
 
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
 	// Проверка на валидность данных
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -135,6 +148,26 @@ func (s *Server) GetCourse(c *gin.Context) {
 }
 
 func (s *Server) CreateTest(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
 	// Получаем Id курса из параметров запроса
 	id := c.Param("course_id")
 

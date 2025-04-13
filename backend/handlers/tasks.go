@@ -14,6 +14,26 @@ type TaskInput struct {
 }
 
 func (s *Server) CreateTask(c *gin.Context) {
+	userId, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cannot get user_id"})
+		c.Abort()
+		return
+	}
+
+	// Получаем пользователя по его ID
+	var user models.User
+	if err := s.db.First(&user, userId).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+		return
+	}
+
+	// Проверка, что пользователь заблокирован
+	if user.IsBlocked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is blocked"})
+		return
+	}
+
 	// Получаем ID курса и теста из параметров запроса
 	courseID, err := strconv.Atoi(c.Param("course_id"))
 	if err != nil {
